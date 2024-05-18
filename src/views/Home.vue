@@ -68,9 +68,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.content {
-  padding: 7rem 2rem;
-}
+
 .content__heading {
   text-align: center;
   margin-bottom: 1rem;

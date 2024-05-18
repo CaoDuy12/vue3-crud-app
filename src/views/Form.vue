@@ -1,34 +1,41 @@
 <template>
   <div class="content">
-    <h2 class="content__heading">Thêm Phim</h2>
+    <h2 class="content__heading">{{ isEditing ? 'Chỉnh sửa Phim' : 'Thêm Phim' }}</h2>
     <hr class="content__separator" />
-    <div v-if="null">
-      <form @submit.prevent="submitForm" >
-        <span>Tiêu đề</span>
-        <input v-model="formData.title" type="text" name="title" placeholder="Tiêu đề" required> <br>
-        <span>Thể loại</span>
-        <input v-model="formData.genre" type="text" name="genre" placeholder="Thể loại" required><br>
-        <span>Đạo diễn</span>
-        <input v-model="formData.director" type="text" name="director" placeholder="Đạo diễn" required><br>
-        <span>Năm phát hành</span>
-        <input v-model.number="formData.releaseYear" type="number" name="releaseYear" placeholder="Năm phát hành" required><br>
-        <span>Đánh giá</span>
-        <input v-model.number="formData.rating" type="number" name="rating" placeholder="Đánh giá" required min="0" max="5"><br>
-        <label>
-          <input v-model="formData.isPopular" type="checkbox" name="isPopular">
-          Phim phổ biến
-        </label><br>
-        <button type="submit">Thêm</button>
-      </form>
-    </div>
-    
-    
+    <form @submit.prevent="handleSubmit">
+      <label>
+        Tiêu đề:
+        <input type="text" v-model="formData.title" required />
+      </label><br>
+      <label>
+        Thể loại:
+        <input type="text" v-model="formData.genre" required />
+      </label><br>
+      <label>
+        Đạo diễn:
+        <input type="text" v-model="formData.director" required />
+      </label><br>
+      <label>
+        Năm phát hành:
+        <input type="number" v-model="formData.releaseYear" required />
+      </label><br>
+      <label>
+        Đánh giá:
+        <input type="number" v-model="formData.rating" required min="0" max="5" />
+      </label><br>
+      <label>
+        Phổ biến:
+        <input type="checkbox" v-model="formData.isPopular" />
+      </label><br>
+      <button type="submit">{{ isEditing ? 'Lưu' : 'Thêm' }}</button>
+      <button type="button" @click="cancelEdit" v-if="isEditing">Hủy</button>
+    </form>
   </div>
 </template>
 
 <script lang="ts">
 import axios from 'axios';
-import { reactive, ref, onMounted, defineComponent } from 'vue';
+import { defineComponent, reactive, watch } from 'vue';
 
 interface Movie {
   id?: string;
@@ -42,49 +49,62 @@ interface Movie {
 
 export default defineComponent({
   name: 'MovieList',
-  setup() {
+  props: {
+    movie: {
+      type: Object as () => Movie | null,
+      default: null
+    },
+    isEditing: {
+      type: Boolean,
+      default: false
+    }
+  },
+  setup(props, { emit }) {
     const formData = reactive<Movie>({
       title: '',
       genre: '',
       director: '',
-      releaseYear: 0,
+      releaseYear: new Date().getFullYear(),
       rating: 0,
       isPopular: false
     });
 
-    
-    const movies = ref<Movie[]>([]);
-
-    async function submitForm() {
-      try {
-        const response = await axios.post<Movie>('https://playground.mockoon.com/movies', formData);
-        console.log(response.data);
-        // movies.value.push(response.data);
-        alert('Movie added successfully!');
-        // Gọi lại API để cập nhật danh sách phim sau khi thêm mới
-        const updatedResponse = await axios.get<Movie[]>('https://playground.mockoon.com/movies');
-        movies.value = updatedResponse.data;
-        
-      } catch (error) {
-        console.error(error);
+    watch(() => props.movie, (newMovie) => {
+      if (newMovie) {
+        Object.assign(formData, newMovie);
       }
-    }
-    
- 
+    }, { immediate: true });
+
+    const handleSubmit = async () => {
+      try {
+        if (props.isEditing && props.movie?.id) {
+          await axios.put(`https://playground.mockoon.com/movies/${props.movie.id}`, formData);
+          emit('updateMovie', formData);
+        } else {
+          const response = await axios.post<Movie>('https://playground.mockoon.com/movies', formData);
+          emit('addMovie', response.data);
+          Object.assign(formData, { title: '', genre: '', director: '', releaseYear: new Date().getFullYear(), rating: 0, isPopular: false });
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      }
+    };
+
+    const cancelEdit = () => {
+      emit('cancelEdit');
+    };
 
     return {
       formData,
-      movies,
-      submitForm
+      handleSubmit,
+      cancelEdit
     };
   }
 });
 </script>
 
 <style scoped>
-.content {
-  padding: 7rem 2rem;
-}
+
 .content__heading {
   text-align: center;
   margin-bottom: 1rem;

@@ -1,7 +1,7 @@
 <template>
   <div class="content">
-    <h2 class="content__heading">Thông tin Phim</h2>
-    <hr class="content__separator" />
+    <h2 class="content__heading" v-if="!isEditing">Thông tin Phim</h2>
+    <hr class="content__separator" v-if="!isEditing" />
     <div v-if="movie" :key="movie.id">
       <div v-if="!isEditing">
         <h3>{{ movie.title }}</h3>
@@ -14,50 +14,29 @@
         <button @click="deleteMovie">Delete</button>
       </div>
       
-      <div v-else>
-        <form @submit.prevent="updateMovie">
-          <label>
-            Tiêu đề:
-            <input type="text" v-model="editableMovie.title" required />
-          </label><br>
-          <label>
-            Thể loại:
-            <input type="text" v-model="editableMovie.genre" required />
-          </label><br>
-          <label>
-            Đạo diễn:
-            <input type="text" v-model="editableMovie.director" required />
-          </label><br>
-          <label>
-            Năm phát hành:
-            <input type="number" v-model="editableMovie.releaseYear" required />
-          </label><br>
-          <label>
-            Đánh giá:
-            <input type="number" v-model="editableMovie.rating" required />
-          </label><br>
-          <label>
-            Phổ biến:
-            <input type="checkbox" v-model="editableMovie.isPopular" />
-          </label><br>
-          <button type="submit">Save</button>
-          <button type="button" @click="cancelEdit">Cancel</button>
-        </form>
-      </div>
+      <Form 
+        v-else 
+        :movie="editableMovie" 
+        :isEditing="isEditing" 
+        @updateMovie="handleUpdateMovie" 
+        @cancelEdit="cancelEdit"
+      />
       
     </div>
     
     <div v-else>
       <p>Không có thông tin phim nào được tìm thấy.</p>
+      <Form @addMovie="handleAddMovie" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-
 import axios from 'axios';
-import { reactive, ref, onMounted, defineComponent } from 'vue';
+import { ref, onMounted, defineComponent } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import Form from './Form.vue';
+
 
 interface Movie {
   id: string;
@@ -70,68 +49,57 @@ interface Movie {
 }
 
 export default defineComponent({
-
+  components: { Form },
   setup() {
     const movie = ref<Movie | null>(null);
     const isEditing = ref(false);
-    const editableMovie = reactive<Movie>({
-      id: '',
-      title: '',
-      genre: '',
-      director: '',
-      releaseYear: new Date().getFullYear(),
-      rating: 0,
-      isPopular: false
-    });
-    const route = useRoute()
-    
-    const fetchMovie: any = async (id: string) => {
+    const editableMovie = ref<Movie | null>(null);
+    const route = useRoute();
+
+    const fetchMovie = async (id: string) => {
       const response = await axios.get<Movie>(`https://playground.mockoon.com/movies/${id}`);
       movie.value = response.data;
-      Object.assign(editableMovie, response.data);
-    }
-
-    const fetchMovieItem = () => {
-      const fetchedMovieItem = fetchMovie(route.params.id)
-      movie.value = fetchedMovieItem
-    }
-
-    const editMovie = () => {
-      isEditing.value = true;
     };
 
-    const updateMovie = async () => {
-      if (movie.value) {
-        try {
-          await axios.put(`https://playground.mockoon.com/movies/${movie.value.id}`, editableMovie);
+    const fetchMovieItem = () => {
+      fetchMovie(route.params.id as string);
+    };
 
-          // For this example, we'll just update the local state
-          Object.assign(movie.value, editableMovie);
-          isEditing.value = false;
-        } catch (error) {
-          console.error("Error updating movie data:", error);
-        }
+    const editMovie = () => {
+      if (movie.value) {
+        isEditing.value = true;
+        editableMovie.value = { ...movie.value };
+      }
+    };
+
+    const handleUpdateMovie = (updatedMovie: Movie) => {
+      if (movie.value) {
+        Object.assign(movie.value, updatedMovie);
+        isEditing.value = false;
       }
     };
 
     const cancelEdit = () => {
-      Object.assign(editableMovie, movie.value);
       isEditing.value = false;
+      editableMovie.value = null;
     };
-    const router= useRouter();
-    const deleteMovie = async (id : string) => {
+
+    const router = useRouter();
+    const deleteMovie = async () => {
       if (movie.value) {
         try {
-          
           await axios.delete(`https://playground.mockoon.com/movies/${movie.value.id}`);
-          // Clear movie data after deletion
           movie.value = null;
-          // isEditing.value = false;
-          // router.push('/home');
+          router.push('/home');
         } catch (error) {
           console.error("Error deleting movie:", error);
         }
       }
+    };
+
+    const handleAddMovie = (newMovie: Movie) => {
+      console.log('Movie added:', newMovie);
+      // Optionally, you can update local state or redirect
     };
 
     onMounted(fetchMovieItem);
@@ -141,20 +109,17 @@ export default defineComponent({
       isEditing,
       editableMovie,
       editMovie,
-      updateMovie,
+      handleUpdateMovie,
       cancelEdit,
       deleteMovie,
-      
+      handleAddMovie,
     };
   }
 });
-
 </script>
 
 <style scoped>
-.content {
-  padding: 7rem 2rem;
-}
+
 .content__heading {
   text-align: center;
   margin-bottom: 1rem;
@@ -163,4 +128,5 @@ export default defineComponent({
   border-color: gray;
   margin-bottom: 1rem;
 }
+
 </style>
