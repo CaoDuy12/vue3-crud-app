@@ -1,23 +1,22 @@
 <template>
   <div class="content">
-    
-    
     <h2 class="content__heading">Danh sách Phim</h2>
     <hr class="content__separator" />
     <div v-if="movies.length > 0">
       <ol>
         <li v-for="movie in movies" :key="movie.id">
-          <!-- <h3>{{ movie.title }}</h3> -->
           <router-link :to="`detail/${movie.id}`">
             <h3>{{ movie.title }}</h3>
-          </router-link> 
+          </router-link>
           <p><strong>Thể loại:</strong> {{ movie.genre }}</p>
           <p><strong>Đạo diễn:</strong> {{ movie.director }}</p>
-
         </li>
       </ol>
+      <!-- <div class="pagination">
+        <button @click="fetchMovies(currentPage - 1)" :disabled="currentPage === 1">Previous Page</button>
+        <button @click="fetchMovies(currentPage + 1)" :disabled="!hasMoreMovies">Next Page</button>
+      </div> -->
     </div>
-   
     <div v-else>
       <p>Không có phim nào được tìm thấy.</p>
     </div>
@@ -25,50 +24,36 @@
 </template>
 
 <script lang="ts">
-import axios from 'axios';
-import { reactive, ref, onMounted, defineComponent } from 'vue';
+import { defineComponent, onMounted } from 'vue';
+import { useMovieStore } from '../store';
+import { storeToRefs } from 'pinia';
 
-interface Movie {
-  id: string;
-  title: string;
-  genre: string;
-  director: string;
 
-}
 
 export default defineComponent({
   name: 'MovieList',
   setup() {
-    const formData = reactive<Movie>({
-      id: '',
-      title: '',
-      genre: '',
-      director: '',
-    
-    });
+    const movieStore = useMovieStore();
+    const { movies } = storeToRefs(movieStore)
 
-    const movies = ref<Movie[]>([]);
+    const fetchMovie = async() => {
+    //  await movieStore.fetchMovies(movieStore.currentPage);
+      await movieStore.fetchMovies();
+    }
 
-    onMounted(async () => {
-      try {
-        const response = await axios.get<Movie[]>('https://playground.mockoon.com/movies'); 
-        movies.value = response.data;
-      } catch (error) {
-        console.error(error);
-      }
-    });
+    onMounted(fetchMovie);
 
     return {
-      formData,
       movies,
-      
+      currentPage: movieStore.currentPage,
+      hasMoreMovies: movieStore.hasMoreMovies,
+      fetchMovies: movieStore.fetchMovies,
     };
   }
 });
 </script>
 
 <style scoped>
-
 .content__heading {
   text-align: center;
   margin-bottom: 1rem;

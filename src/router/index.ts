@@ -1,6 +1,6 @@
 import Home from "../views/Home.vue";
 import MovieDetail from "@/views/MovieDetail.vue";
-import Form from "@/views/Form.vue";
+import Form from "@/components/Form.vue";
 
 import { createRouter, createWebHistory } from "vue-router";
 import Users from "../views/Users.vue";
@@ -10,6 +10,10 @@ const routes = [
     path: "/users/:user",
     component: Users,
     children: [
+      {
+        path: "/",
+        redirect: "/home",
+      },
       { path: "home", component: Home },
 
       { path: "form", component: Form },

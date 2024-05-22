@@ -11,7 +11,7 @@
         <p><strong>Đánh giá:</strong> {{ movie.rating }}</p>
         <p><strong>Phổ biến:</strong> {{ movie.isPopular ? 'Có' : 'Không' }}</p>
         <button @click="editMovie">Edit</button>
-        <button @click="deleteMovie">Delete</button>
+        <button @click="deleteMovie" >Delete</button>
       </div>
       
       <Form 
@@ -32,37 +32,30 @@
 </template>
 
 <script lang="ts">
-import axios from 'axios';
 import { ref, onMounted, defineComponent } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import Form from './Form.vue';
+import { useMovieStore } from '../store';
+import Form from '../components/Form.vue';
+import axios from 'axios';
+import type { Movie } from '../types';
 
 
-interface Movie {
-  id: string;
-  title: string;
-  genre: string;
-  director: string;
-  releaseYear: number;
-  rating: number;
-  isPopular: boolean;
-}
 
 export default defineComponent({
   components: { Form },
   setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const movieStore = useMovieStore();
+    
     const movie = ref<Movie | null>(null);
     const isEditing = ref(false);
     const editableMovie = ref<Movie | null>(null);
-    const route = useRoute();
-
-    const fetchMovie = async (id: string) => {
-      const response = await axios.get<Movie>(`https://playground.mockoon.com/movies/${id}`);
-      movie.value = response.data;
-    };
-
-    const fetchMovieItem = () => {
-      fetchMovie(route.params.id as string);
+    
+    
+    const fetchMovieItem = async() => {
+      const fetchedMovie = await movieStore.fetchMovie(route.params.id as string);
+      movie.value = fetchedMovie
     };
 
     const editMovie = () => {
@@ -84,18 +77,26 @@ export default defineComponent({
       editableMovie.value = null;
     };
 
-    const router = useRouter();
+    // const deleteMovie = async() => {
+    //   if (movie.value) {
+    //     // try {
+    //       await movieStore.deleteMovie(movie.value.id!);
+    //       // movie.value = null;
+    //       router.push('home');
+    //     // } catch (error) {
+    //       // console.error("Error deleting movie:", error);
+    //     // }
+    //   }
+    // };
     const deleteMovie = async () => {
+   
       if (movie.value) {
-        try {
-          await axios.delete(`https://playground.mockoon.com/movies/${movie.value.id}`);
-          movie.value = null;
-          router.push('/home');
-        } catch (error) {
-          console.error("Error deleting movie:", error);
-        }
+        await movieStore.deleteMovie(movie.value.id)
+        router.push('home')
       }
-    };
+    }
+
+    
 
     const handleAddMovie = (newMovie: Movie) => {
       console.log('Movie added:', newMovie);
@@ -113,13 +114,13 @@ export default defineComponent({
       cancelEdit,
       deleteMovie,
       handleAddMovie,
+   
     };
   }
 });
 </script>
 
 <style scoped>
-
 .content__heading {
   text-align: center;
   margin-bottom: 1rem;
@@ -128,5 +129,4 @@ export default defineComponent({
   border-color: gray;
   margin-bottom: 1rem;
 }
-
 </style>

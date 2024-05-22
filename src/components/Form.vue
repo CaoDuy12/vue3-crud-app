@@ -34,8 +34,9 @@
 </template>
 
 <script lang="ts">
-import axios from 'axios';
 import { defineComponent, reactive, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useMovieStore } from '../store';
 
 interface Movie {
   id?: string;
@@ -48,7 +49,7 @@ interface Movie {
 }
 
 export default defineComponent({
-  name: 'MovieList',
+  name: 'MovieForm',
   props: {
     movie: {
       type: Object as () => Movie | null,
@@ -60,6 +61,9 @@ export default defineComponent({
     }
   },
   setup(props, { emit }) {
+    const movieStore = useMovieStore();
+    const router = useRouter();
+    
     const formData = reactive<Movie>({
       title: '',
       genre: '',
@@ -78,13 +82,13 @@ export default defineComponent({
     const handleSubmit = async () => {
       try {
         if (props.isEditing && props.movie?.id) {
-          await axios.put(`https://playground.mockoon.com/movies/${props.movie.id}`, formData);
+          await movieStore.updateMovie(formData);
           emit('updateMovie', formData);
         } else {
-          const response = await axios.post<Movie>('https://playground.mockoon.com/movies', formData);
-          emit('addMovie', response.data);
-          Object.assign(formData, { title: '', genre: '', director: '', releaseYear: new Date().getFullYear(), rating: 0, isPopular: false });
+          await movieStore.addMovie(formData);
+          emit('addMovie', formData);
         }
+        router.push('home'); // Redirect to Home page
       } catch (error) {
         console.error("Error submitting form:", error);
       }
@@ -92,6 +96,7 @@ export default defineComponent({
 
     const cancelEdit = () => {
       emit('cancelEdit');
+      router.push('/home'); // Redirect to Home page on cancel
     };
 
     return {
@@ -104,7 +109,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
 .content__heading {
   text-align: center;
   margin-bottom: 1rem;
