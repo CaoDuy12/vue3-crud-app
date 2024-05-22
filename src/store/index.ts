@@ -43,10 +43,14 @@ export const useMovieStore = defineStore("movie", {
     },
 
     async fetchMovie(id: string) {
-      const response = await axios.get<Movie>(
-        `https://playground.mockoon.com/movies/${id}`
-      );
-      return response.data;
+      try {
+        const response = await axios.get<Movie>(
+          `https://playground.mockoon.com/movies/${id}`
+        );
+        return response.data;
+      } catch (error) {
+        console.error(error);
+      }
     },
 
     async addMovie(movie: Movie) {
@@ -75,8 +79,12 @@ export const useMovieStore = defineStore("movie", {
       }
     },
     async deleteMovie(id: string) {
-      await axios.delete(`https://playground.mockoon.com/movies/${id}`);
-      this.movies = this.movies.filter((movie: any) => movie.id !== id);
+      try {
+        await axios.delete(`https://playground.mockoon.com/movies/${id}`);
+        this.movies = this.movies.filter((movie: any) => movie.id !== id);
+      } catch (error) {
+        console.error("Error delete movie:", error);
+      }
     },
   },
 });

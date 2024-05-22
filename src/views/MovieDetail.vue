@@ -77,24 +77,24 @@ export default defineComponent({
       editableMovie.value = null;
     };
 
-    // const deleteMovie = async() => {
-    //   if (movie.value) {
-    //     // try {
-    //       await movieStore.deleteMovie(movie.value.id!);
-    //       // movie.value = null;
-    //       router.push('home');
-    //     // } catch (error) {
-    //       // console.error("Error deleting movie:", error);
-    //     // }
-    //   }
-    // };
-    const deleteMovie = async () => {
-   
+    const deleteMovie = async() => {
       if (movie.value) {
-        await movieStore.deleteMovie(movie.value.id)
-        router.push('home')
+        try {
+          await movieStore.deleteMovie(movie.value.id!);
+           
+          router.push('home');
+        } catch (error) {
+          console.error("Error deleting movie:", error);
+        }
       }
-    }
+    };
+    // const deleteMovie = async () => {
+   
+    //   if (movie.value) {
+    //     await movieStore.deleteMovie(movie.value.id!)
+    //     router.push('home')
+    //   }
+    // }
 
     
 
