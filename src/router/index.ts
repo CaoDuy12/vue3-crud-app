@@ -7,7 +7,7 @@ import Users from "../views/Users.vue";
 
 const routes = [
   {
-    path: "/users/:user",
+    path: "/users",
     component: Users,
     children: [
       {

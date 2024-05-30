@@ -2,9 +2,9 @@
   <nav>
     <h1>My Vue</h1>
     <ul class="nav-link">
-        <li><router-link to="/users/duy/home">Home</router-link></li>
-        <li><router-link to="/users/duy/form">Form</router-link></li>
-        <li><router-link to="/users/duy/detail">About</router-link></li>
+        <li><router-link to="/users/home">Home</router-link></li>
+        <li><router-link to="/users/form">Form</router-link></li>
+        <li><router-link to="/users/detail">About</router-link></li>
     </ul>
   </nav>
   

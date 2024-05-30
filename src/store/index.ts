@@ -6,41 +6,28 @@ import { defineStore } from "pinia";
 export const useMovieStore = defineStore("movie", {
   state: () => ({
     movies: <Movie[]>[],
-    currentPage: 1,
-    hasMoreMovies: true,
+    totalItems: 0,
+    // hasMoreMovies: true,
   }),
   actions: {
-    // async fetchMovies(page: number) {
-    //   try {
-    //     const response = await axios.get<Movie[]>(
-    //       `https://playground.mockoon.com/movies`,
-    //       {
-    //         params: { page },
-    //       }
-    //     );
+    async fetchMovies(page: number, limit: number) {
+      const response = await axios.get(
+        `https://playground.mockoon.com/movies?page=${page}&limit=${limit}`
+      );
+      this.movies = response.data;
+      this.totalItems = response.data;
+    },
 
-    //     if (response.data.length > 0) {
-    //       this.movies = response.data;
-    //       this.currentPage = page;
-    //       this.hasMoreMovies = response.data.length > 0;
-    //     } else {
-    //       this.hasMoreMovies = false;
-    //     }
+    // async fetchMovies() {
+    //   try {
+    //     const response = await axios.get(
+    //       "https://playground.mockoon.com/movies"
+    //     );
+    //     this.movies = response.data;
     //   } catch (error) {
     //     console.error(error);
     //   }
     // },
-
-    async fetchMovies() {
-      try {
-        const response = await axios.get(
-          "https://playground.mockoon.com/movies"
-        );
-        this.movies = response.data;
-      } catch (error) {
-        console.error(error);
-      }
-    },
 
     async fetchMovie(id: string) {
       try {
